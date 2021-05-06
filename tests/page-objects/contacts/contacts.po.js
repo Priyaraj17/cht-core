@@ -1,5 +1,7 @@
 const helper = require('../../helper');
 const genericForm = require('../forms/generic-form.po');
+const utils = require('../../utils');
+
 const searchBox = element(by.css('#freetext'));
 const searchButton = element(by.css('#search'));
 const refreshButton = element(by.css('.fa fa-undo'));
@@ -10,7 +12,7 @@ const newPrimaryContactName = element(by.css('[name="/data/contact/name"]'));
 const personNotes = element(by.css('[name="/data/contact/notes"]'));
 const newPrimaryContactButton = element(by.css('[name="/data/init/create_new_person"][value="new_person"]'));
 const manualDistrictHospitalName = element(by.css('[name="/data/district_hospital/is_name_generated"][value="false"]'));
-const contactName = element(by.css('contacts-content .body.meta .heading-content'));
+const contactName = element(by.css('contacts-content .body.meta .heading-content h2'));
 const rows = element.all(by.css('#contacts-list .content-row'));
 const dateOfBirthField = element(by.css('[placeholder="yyyy-mm-dd"]'));
 const contactSexField = element(by.css('[data-name="/data/contact/sex"][value="female"]'));
@@ -23,6 +25,7 @@ const newClinicButton = element(by.css('[href$="/add/clinic"]'));
 const newPersonButton = element(by.css('[href$="/add/person"]'));
 const personName = element(by.css('[name="/data/person/name"]'));
 const personSexField = element(by.css('[data-name="/data/person/sex"][value="female"]'));
+const contactSummaryContainer = element(by.css('.body.meta .row.flex.grid'));
 
 const leftActionBarButtons = () => element.all(by.css('.general-actions .actions.dropup > a'));
 
@@ -38,6 +41,7 @@ module.exports = {
   peopleRows,
   contactName,
   editContact,
+  contactLoaded: () => helper.waitUntilReadyNative(contactSummaryContainer),
   center: () => element(by.css('.card h2')),
   childrenCards: () => element.all(by.css('.right-pane .card.children')),
   name: () =>  element(by.css('.children h4 span')),
@@ -46,7 +50,14 @@ module.exports = {
     await helper.waitUntilReadyNative(rows.last());
     await module.exports.clickRowByName(text);
     await helper.waitUntilReadyNative(contactName);
+    // wait until contact summary is loaded
+    await module.exports.contactLoaded();
     expect(await contactName.getText()).toBe(text);
+  },
+
+  loadContact: async (uuid) => {
+    await browser.get(utils.getBaseUrl() + 'contacts/' + uuid);
+    await module.exports.contactLoaded();
   },
 
   addNewDistrict: async (districtName) => {
